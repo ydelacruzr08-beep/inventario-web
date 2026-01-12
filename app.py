@@ -53,6 +53,6 @@ def inventario():
     return render_template("inventario.html", datos=datos)
 @app.route("/test")
 def test():
-    return "🔥 Flask funciona"
+    return "🔥 Flask funcionaa"
 
 
