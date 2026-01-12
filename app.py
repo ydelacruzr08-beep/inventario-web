@@ -51,5 +51,8 @@ def inventario():
             datos.append(fila)
 
     return render_template("inventario.html", datos=datos)
+@app.route("/test")
+def test():
+    return "🔥 Flask funciona"
 
 
