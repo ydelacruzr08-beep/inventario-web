@@ -1,34 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <title>Inventario</title>
-    <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid black; padding: 8px; }
-        th { background: #222; color: white; }
-        .cero { background: #ffb3b3; }
-    </style>
 </head>
 <body>
+    <h1>Inventario</h1>
 
-<h1>Inventario</h1>
+    <table border="1">
+        <tr>
+            <th>Número</th>
+            <th>Nombre</th>
+            <th>Cantidad</th>
+            <th>Estado</th>
+        </tr>
 
-<table>
-    <tr>
-        <th>Código</th>
-        <th>Nombre</th>
-        <th>Cantidad</th>
-    </tr>
-
-    {% for item in datos %}
-    <tr class="{% if item.cantidad == '0' %}cero{% endif %}">
-        <td>{{ item.codigo }}</td>
-        <td>{{ item.nombre }}</td>
-        <td>{{ item.cantidad }}</td>
-    </tr>
-    {% endfor %}
-
-</table>
-
+        {% for fila in datos %}
+        <tr>
+            <td>{{ fila["Numero de pieza"] }}</td>
+            <td>{{ fila["Nombre"] }}</td>
+            <td>{{ fila["Cantidad"] }}</td>
+            <td>{{ fila["Estado"] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 </body>
 </html>
