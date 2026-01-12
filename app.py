@@ -37,4 +37,19 @@ def index():
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
 
+import csv
+
+@app.route("/inventario")
+def inventario():
+    if maintenance_mode():
+        return "🛑 Sistema en mantenimiento"
+
+    datos = []
+    with open("inventario.csv", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for fila in reader:
+            datos.append(fila)
+
+    return render_template("inventario.html", datos=datos)
+
 
