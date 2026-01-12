@@ -32,7 +32,7 @@ def index():
         for row in reader:
             inventario.append(row)
 
-    return "<h1>Inventario funcionando</h1>"
+    return "<h1>Inventario funcionando al chingaso </h1>"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
@@ -51,8 +51,6 @@ def inventario():
             datos.append(fila)
 
     return render_template("inventario.html", datos=datos)
-@app.route("/test")
-def test():
-    return "🔥 Flask funcionaa"
+
 
 
