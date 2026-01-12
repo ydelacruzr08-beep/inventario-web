@@ -3,6 +3,13 @@ import csv
 import json
 import os
 
+def maintenance_mode():
+    try:
+        with open("maintenance.txt", "r") as f:
+            return f.read().strip() == "ON"
+    except:
+        return False
+
 app = Flask(__name__)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
