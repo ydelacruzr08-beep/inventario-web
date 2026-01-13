@@ -3,26 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <title>Inventario</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #222;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <h1>Inventario</h1>
 
-    <table border="1">
-        <tr>
-            <th>Número</th>
-            <th>Nombre</th>
-            <th>Cantidad</th>
-            <th>Estado</th>
-        </tr>
+<h1>Inventario</h1>
 
-        {% for fila in datos %}
-        <tr>
-            <td>{{ fila["Numero de pieza"] }}</td>
-            <td>{{ fila["Nombre"] }}</td>
-            <td>{{ fila["Cantidad"] }}</td>
-            <td>{{ fila["Estado"] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+{% if datos %}
+<table>
+    <tr>
+        <th>Número</th>
+        <th>Nombre</th>
+        <th>Cantidad</th>
+        <th>Estado</th>
+    </tr>
+
+    {% for fila in datos %}
+    <tr>
+        <td>{{ fila["Numero de pieza"] }}</td>
+        <td>{{ fila["Nombre"] }}</td>
+        <td>{{ fila["Cantidad"] }}</td>
+        <td>{{ fila["Estado"] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No hay datos en el inventario.</p>
+{% endif %}
+
 </body>
 </html>
