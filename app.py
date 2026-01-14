@@ -3,13 +3,33 @@ import csv
 import os
 import glob
 from openpyxl import Workbook
+import psycopg2
+import os
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
 # ================== RUTAS ==================
 BASE = os.path.dirname(os.path.abspath(__file__))
 KITS = os.path.join(BASE, "kits.csv")
+######################################
+def get_db_connection():
+    db_url = os.environ.get("DATABASE_URL")
 
+    if not db_url:
+        raise Exception("DATABASE_URL no está configurada")
+
+    result = urlparse(db_url)
+
+    conn = psycopg2.connect(
+        database=result.path[1:],
+        user=result.username,
+        password=result.password,
+        host=result.hostname,
+        port=result.port,
+        sslmode="require"
+    )
+    return conn
 
 # ================== INVENTARIOS ==================
 def ordenar_piezas(pieza):
@@ -319,6 +339,14 @@ def agregar_stock():
     )
 
     return redirect(url_for("inventario", archivo=archivo))
+@app.route("/test-db")
+def test_db():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT 1;")
+    cur.close()
+    conn.close()
+    return "✅ Conexión a la base de datos exitosa"
 
 # ================== MAIN ==================
 if __name__ == "__main__":

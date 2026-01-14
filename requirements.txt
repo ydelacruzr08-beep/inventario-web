@@ -1,3 +1,5 @@
 Flask
 gunicorn
 openpyxl
+psycopg2-binary
+
