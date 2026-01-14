@@ -347,6 +347,9 @@ def test_db():
     cur.close()
     conn.close()
     return "✅ Conexión a la base de datos exitosa"
+@app.route("/test-db")
+def test_db():
+    return "SI ESTOY USANDO app.py EN RENDER"
 
 # ================== MAIN ==================
 if __name__ == "__main__":
