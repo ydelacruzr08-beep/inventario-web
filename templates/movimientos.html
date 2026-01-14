@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Movimientos</title>
+</head>
+<body>
+
+<br>
+<a href="/">⬅ Volver al menú</a>
+
+<h2>📤 Registrar salida de material</h2>
+
+<form action="/movimientos/registrar" method="post">
+    <label>Empleado:</label><br>
+    <input type="text" name="empleado" required><br><br>
+
+    <label>Inventario:</label><br>
+    <select name="inventario" required>
+        {% for i in inventarios %}
+        <option value="{{ i }}">{{ i }}</option>
+        {% endfor %}
+    </select><br><br>
+
+    <label>Número de pieza:</label><br>
+    <input type="text" name="pieza" required><br><br>
+
+    <label>Cantidad:</label><br>
+    <input type="number" name="cantidad" min="1" required><br><br>
+
+    <button type="submit">✅ Registrar salida</button>
+</form>
+
+<hr>
+
+<hr>
+
+<form action="/movimientos/borrar" method="post"
+      onsubmit="return confirm('¿Seguro que deseas borrar TODO el historial?');">
+    <button style="background:red;color:white;">
+        🗑️ Borrar historial completo
+    </button>
+</form>
+
+<br>
+
+<a href="/movimientos/descargar">
+    📥 Descargar historial en Excel
+</a>
+
+<hr>
+
+
+<h2>📜 Historial de movimientos</h2>
+
+<table border="1" cellpadding="5">
+<tr>
+    <th>Fecha</th>
+    <th>Empleado</th>
+    <th>Inventario</th>
+    <th>Pieza</th>
+    <th>Cantidad</th>
+    <th>Acción</th>
+</tr>
+
+{% for m in datos %}
+<tr>
+    <td>{{ m[0] }}</td>
+    <td>{{ m[1] }}</td>
+    <td>{{ m[2] }}</td>
+    <td>{{ m[3] }}</td>
+    <td>{{ m[4] }}</td>
+    <td>{{ m[5] }}</td>
+</tr>
+{% endfor %}
+</table>
+
+</body>
+</html>

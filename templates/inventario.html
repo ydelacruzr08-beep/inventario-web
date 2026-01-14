@@ -1,52 +1,140 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Inventario</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        th, td {
-            border: 1px solid #444;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #222;
-            color: white;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Inventario {{ archivo }}</title>
+
+<a href="/inventario/descargar/{{ archivo }}">📥 Descargar Excel</a>
+
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+}
+.container {
+    width: 90%;
+    margin: 30px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+h1 {
+    margin-bottom: 10px;
+}
+form {
+    margin-bottom: 15px;
+}
+input, button {
+    padding: 6px;
+    margin-right: 5px;
+}
+button {
+    cursor: pointer;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    text-align: center;
+}
+th {
+    background: #2c7be5;
+    color: white;
+}
+.eliminar {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 8px;
+}
+.eliminar:hover {
+    background: #b02a37;
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+</style>
+
 </head>
 <body>
 
-<h1>Inventario</h1>
+<div class="container">
 
-{% if datos %}
+<div class="top-bar">
+    <h1>📦 Inventario: {{ archivo }}</h1>
+    <a href="/inventarios">⬅ Volver</a>
+</div>
+
+<!-- 🔍 BUSCAR PIEZA EXACTA -->
+<form method="get">
+    <input type="text" name="buscar" placeholder="Número exacto de pieza"
+           value="{{ request.args.get('buscar','') }}">
+    <button type="submit">🔍 Buscar</button>
+    <a href="/inventario/{{ archivo }}">Limpiar</a>
+</form>
+
+<!-- ➕ AGREGAR / ACTUALIZAR -->
+<form action="/inventario/editar" method="post">
+    <input type="hidden" name="archivo" value="{{ archivo }}">
+    <input type="text" name="pieza" placeholder="Número de pieza" required>
+    <input type="text" name="nombre" placeholder="Nombre" required>
+    <input type="number" name="cantidad" placeholder="Cantidad" required>
+    <button type="submit">➕ Guardar / Actualizar</button>
+</form>
+
+<hr>
+
+<h3>➕ Agregar piezas al inventario</h3>
+
+<form action="/inventario/agregar_stock" method="post">
+    <input type="hidden" name="archivo" value="{{ archivo }}">
+
+    <label>Número de pieza:</label>
+    <input type="text" name="pieza" required>
+
+    <label>Cantidad:</label>
+    <input type="number" name="cantidad" min="1" required>
+
+    <button type="submit">➕ Confirmar</button>
+</form>
+
+
 <table>
-    <tr>
-        <th>Número</th>
-        <th>Nombre</th>
-        <th>Cantidad</th>
-        <th>Estado</th>
-    </tr>
+<tr>
+    <th>Número</th>
+    <th>Nombre</th>
+    <th>Cantidad</th>
+    <th>Estado</th>
+    <th>Acción</th>
+</tr>
 
-    {% for fila in datos %}
-    <tr>
-        <td>{{ fila["Numero de pieza"] }}</td>
-        <td>{{ fila["Nombre"] }}</td>
-        <td>{{ fila["Cantidad"] }}</td>
-        <td>{{ fila["Estado"] }}</td>
-    </tr>
-    {% endfor %}
-</table>
-{% else %}
-<p>No hay datos en el inventario.</p>
+{% for p, d in datos.items() %}
+{% if not request.args.get("buscar") or p == request.args.get("buscar") %}
+<tr>
+    <td>{{ p }}</td>
+    <td>{{ d.nombre }}</td>
+    <td>{{ d.cantidad }}</td>
+    <td>{{ "SIN STOCK" if d.cantidad <= 0 else "OK" }}</td>
+    <td>
+        <form action="/inventario/eliminar" method="post" style="display:inline;">
+            <input type="hidden" name="archivo" value="{{ archivo }}">
+            <input type="hidden" name="pieza" value="{{ p }}">
+            <button class="eliminar">🗑️</button>
+        </form>
+    </td>
+</tr>
 {% endif %}
+{% endfor %}
+
+</table>
+
+</div>
 
 </body>
 </html>

@@ -1,5 +1,5 @@
-Fecha,Empleado,Tipo,Descripcion
-
-
-2026-01-12 11:57:36,yan ,PIEZA,3 de 123 de inventario_taller.csv
-2026-01-12 11:57:55,yan ,PIEZA,1 de 123 de inventario_taller.csv
+Fecha,Empleado,Pieza,Cantidad,Accion
+2026-01-13 14:13:23,123,3,1,SALIDA
+2026-01-13 14:41:50,Yan,inventario_Inventario_de_prueba.csv,3,1,SALIDA
+2026-01-13 14:42:32,Yan,inventario_Inventario_de_prueba.csv,3,1,SALIDA
+2026-01-14 09:40:15,SISTEMA,inventario_Inventario_de_prueba.csv,3,1,ENTRADA

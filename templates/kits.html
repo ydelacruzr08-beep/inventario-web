@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Kits</title>
+</head>
+<body>
+
+<h2>🧰 Gestión de Kits</h2>
+<a href="/">⬅ Volver</a>
+
+<hr>
+
+<form action="/kits/guardar" method="post">
+    <input name="nombre" placeholder="Nombre del kit" required>
+    <input name="descripcion" placeholder="Descripción">
+    <input name="disponibles" type="number" placeholder="Disponibles" required>
+    <input name="pieza" placeholder="Número de pieza" required>
+    <input name="cantidad" type="number" placeholder="Cantidad por kit" required>
+    <button type="submit">💾 Guardar / Agregar</button>
+</form>
+
+<hr>
+
+{% for k, d in kits.items() %}
+<h3>{{ k }} ({{ d.disponibles }})</h3>
+<p>{{ d.descripcion }}</p>
+
+<ul>
+{% for p, c in d.piezas.items() %}
+<li>
+    Pieza {{ p }} → {{ c }}
+    <form action="/kits/eliminar_pieza" method="post" style="display:inline;">
+        <input type="hidden" name="kit" value="{{ k }}">
+        <input type="hidden" name="pieza" value="{{ p }}">
+        <button>🗑️</button>
+    </form>
+</li>
+{% endfor %}
+</ul>
+{% endfor %}
+
+</body>
+</html>
