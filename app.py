@@ -4,24 +4,30 @@ import os
 import glob
 from openpyxl import Workbook
 import psycopg2
-import os
 from urllib.parse import urlparse
+from datetime import datetime
 
 app = Flask(__name__)
 
-# ================== RUTAS ==================
+# ======================================================
+# 🔹 CONFIGURACIÓN GENERAL
+# ======================================================
 BASE = os.path.dirname(os.path.abspath(__file__))
 KITS = os.path.join(BASE, "kits.csv")
-######################################
+MOV = os.path.join(BASE, "movimientos.csv")
+
+# ======================================================
+# 🔹 CONEXIÓN A BASE DE DATOS (RENDER)
+# 🔹 NO TOCAR – SOLO VERIFICA QUE DATABASE_URL EXISTA
+# ======================================================
 def get_db_connection():
     db_url = os.environ.get("DATABASE_URL")
-
     if not db_url:
-        raise Exception("DATABASE_URL no está configurada")
+        raise Exception("❌ DATABASE_URL no está configurada en Render")
 
     result = urlparse(db_url)
 
-    conn = psycopg2.connect(
+    return psycopg2.connect(
         database=result.path[1:],
         user=result.username,
         password=result.password,
@@ -29,9 +35,26 @@ def get_db_connection():
         port=result.port,
         sslmode="require"
     )
-    return conn
 
-# ================== INVENTARIOS ==================
+# ======================================================
+# 🔹 TEST DE SERVIDOR + BASE DE DATOS
+# 👉 https://TU_APP.onrender.com/test-db
+# ======================================================
+@app.route("/test-db")
+def test_db():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT 1;")
+        cur.close()
+        conn.close()
+        return "✅ Servidor activo y DB conectada correctamente"
+    except Exception as e:
+        return f"❌ Error de conexión: {e}", 500
+
+# ======================================================
+# ================== INVENTARIOS ======================
+# ======================================================
 def ordenar_piezas(pieza):
     return (0, int(pieza)) if pieza.isdigit() else (1, pieza)
 
@@ -54,12 +77,16 @@ def guardar_inventario(datos, ruta):
             estado = "SIN STOCK" if d["cantidad"] <= 0 else "OK"
             w.writerow([p, d["nombre"], d["cantidad"], estado])
 
-# ================== MENÚ ==================
+# ======================================================
+# ================== MENÚ ==============================
+# ======================================================
 @app.route("/")
 def menu():
     return render_template("menu.html")
 
-# ================== INVENTARIOS ==================
+# ======================================================
+# ================== INVENTARIOS ======================
+# ======================================================
 @app.route("/inventarios")
 def seleccionar_inventario():
     archivos = [
@@ -135,10 +162,9 @@ def descargar_excel(archivo):
     wb.save(salida)
     return send_file(salida, as_attachment=True)
 
-from datetime import datetime
-
-MOV = os.path.join(BASE, "movimientos.csv")
-
+# ======================================================
+# ================== MOVIMIENTOS ======================
+# ======================================================
 def registrar_movimiento(empleado, inventario, pieza, cantidad, accion):
     existe = os.path.exists(MOV)
     with open(MOV, "a", newline="", encoding="utf-8") as f:
@@ -154,98 +180,20 @@ def registrar_movimiento(empleado, inventario, pieza, cantidad, accion):
             accion
         ])
 
-# ================== KITS (ARREGLADO BIEN) ==================
-def cargar_kits():
-    kits = {}
-    if not os.path.exists(KITS):
-        return kits
-
-    with open(KITS, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            nombre = r.get("Nombre del kit")
-            if not nombre:
-                continue
-
-            if nombre not in kits:
-                kits[nombre] = {
-                    "descripcion": r.get("Descripcion", ""),
-                    "disponibles": int(r.get("Disponibles", 0)),
-                    "piezas": {}
-                }
-
-            pieza = r.get("Pieza")
-            cantidad = r.get("Cantidad")
-
-            if pieza and cantidad:
-                kits[nombre]["piezas"][pieza] = int(cantidad)
-
-    return kits
-
-
-def guardar_kits(kits):
-    with open(KITS, "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        w.writerow(["Nombre del kit", "Descripcion", "Disponibles", "Pieza", "Cantidad"])
-        for k, d in kits.items():
-            for p, c in d["piezas"].items():
-                w.writerow([k, d["descripcion"], d["disponibles"], p, c])
-
-@app.route("/kits")
-def vista_kits():
-    return render_template("kits.html", kits=cargar_kits())
-
-@app.route("/kits/guardar", methods=["POST"])
-def guardar_kit():
-    nombre = request.form["nombre"]
-    descripcion = request.form.get("descripcion", "")
-    disponibles = int(request.form["disponibles"])
-    pieza = request.form["pieza"]
-    cantidad = int(request.form["cantidad"])
-
-    kits = cargar_kits()
-
-    if nombre not in kits:
-        kits[nombre] = {
-            "descripcion": descripcion,
-            "disponibles": disponibles,
-            "piezas": {}
-        }
-
-    kits[nombre]["piezas"][pieza] = cantidad
-    guardar_kits(kits)
-
-    return redirect("/kits")
-
-@app.route("/kits/eliminar_pieza", methods=["POST"])
-def eliminar_pieza_kit():
-    nombre = request.form["kit"]
-    pieza = request.form["pieza"]
-
-    kits = cargar_kits()
-    if nombre in kits and pieza in kits[nombre]["piezas"]:
-        del kits[nombre]["piezas"][pieza]
-
-    guardar_kits(kits)
-    return redirect("/kits")
-
 @app.route("/movimientos")
 def movimientos():
     datos = []
     if os.path.exists(MOV):
         with open(MOV, newline="", encoding="utf-8") as f:
             datos = list(csv.reader(f))[1:]
-    
+
     inventarios = [
         os.path.basename(x)
         for x in glob.glob(os.path.join(BASE, "inventario*.csv"))
     ]
 
-    return render_template(
-        "movimientos.html",
-        datos=datos,
-        inventarios=inventarios
-    )
+    return render_template("movimientos.html", datos=datos, inventarios=inventarios)
+
 @app.route("/movimientos/registrar", methods=["POST"])
 def registrar_salida():
     empleado = request.form["empleado"]
@@ -254,100 +202,22 @@ def registrar_salida():
     cantidad = int(request.form["cantidad"])
 
     ruta = os.path.join(BASE, archivo)
-
     datos = leer_inventario(ruta)
 
     if pieza not in datos:
         return "Pieza no encontrada", 400
-
     if datos[pieza]["cantidad"] < cantidad:
         return "Stock insuficiente", 400
 
     datos[pieza]["cantidad"] -= cantidad
     guardar_inventario(datos, ruta)
-
     registrar_movimiento(empleado, archivo, pieza, cantidad, "SALIDA")
 
     return redirect("/movimientos")
-@app.route("/movimientos/borrar", methods=["POST"])
-def borrar_movimientos():
-    if os.path.exists(MOV):
-        os.remove(MOV)
-    return redirect("/movimientos")
-@app.route("/movimientos/descargar")
-def descargar_movimientos_excel():
-    if not os.path.exists(MOV):
-        return "No hay movimientos", 404
 
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Movimientos"
-
-    with open(MOV, newline="", encoding="utf-8") as f:
-        for fila in csv.reader(f):
-            ws.append(fila)
-
-    salida = os.path.join(BASE, "movimientos.xlsx")
-    wb.save(salida)
-
-    return send_file(salida, as_attachment=True)
-@app.route("/movimientos/agregar", methods=["POST"])
-def agregar_pieza():
-    empleado = request.form["empleado"]
-    archivo = request.form["archivo"]
-    pieza = request.form["pieza"]
-    cantidad = int(request.form["cantidad"])
-
-    ruta = os.path.join(BASE, archivo)
-    datos = leer_inventario(ruta)
-
-    # ⚠️ SOLO SI EXISTE LA PIEZA
-    if pieza not in datos:
-        return "La pieza no existe en el inventario", 400
-
-    datos[pieza]["cantidad"] += cantidad
-    guardar_inventario(datos, ruta)
-
-    registrar_movimiento(
-        f"Empleado {empleado} agregó {cantidad} de la pieza {pieza} en {archivo}"
-    )
-
-    return redirect("/movimientos")
-
-@app.route("/inventario/agregar_stock", methods=["POST"])
-def agregar_stock():
-    archivo = request.form["archivo"]
-    pieza = request.form["pieza"]
-    cantidad = int(request.form["cantidad"])
-
-    ruta = os.path.join(BASE, archivo)
-    datos = leer_inventario(ruta)
-
-    if pieza not in datos:
-        return "La pieza no existe en este inventario", 400
-
-    datos[pieza]["cantidad"] += cantidad
-    guardar_inventario(datos, ruta)
-
-    # registrar movimiento (ENTRADA)
-    registrar_movimiento(
-        "SISTEMA",
-        archivo,
-        pieza,
-        cantidad,
-        "ENTRADA"
-    )
-
-    return redirect(url_for("inventario", archivo=archivo))
-@app.route("/test-db")
-def test_db():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT 1;")
-    cur.close()
-    conn.close()
-    return "✅ Conexión a la base de datos exitosa"
-
-# ================== MAIN ==================
+# ======================================================
+# ================== MAIN ==============================
+# ⚠️ Render ignora esto y usa gunicorn
+# ======================================================
 if __name__ == "__main__":
     app.run(debug=True)
